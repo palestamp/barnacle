@@ -1,0 +1,3 @@
+
+DROP SCHEMA barnacle CASCADE;
+DROP SCHEMA queues CASCADE;
