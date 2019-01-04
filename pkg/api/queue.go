@@ -8,7 +8,7 @@ import (
 // The Queue interface is implemented by objects that
 // represent queue
 type Queue interface {
-	Add(MessageInput) (MessageID, error)
+	Add(EnqueueMessageRequest) (MessageID, error)
 	Ack(ackKey string) error
 	Poll(PollRequest) ([]Message, error)
 }

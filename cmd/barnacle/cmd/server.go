@@ -7,10 +7,11 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/palestamp/barnacle/pkg/api"
 	"github.com/palestamp/barnacle/pkg/apis"
 	"github.com/palestamp/barnacle/pkg/backends"
 	"github.com/palestamp/barnacle/pkg/backends/postgres"
-	"github.com/palestamp/barnacle/pkg/configuration"
+	"github.com/palestamp/barnacle/pkg/metadata"
 )
 
 var (
@@ -33,20 +34,16 @@ func ServeCmd() *cobra.Command {
 }
 
 func serveCmd(cmd *cobra.Command, args []string) error {
-	metadataStorage, err := configuration.NewPostgresStorage(scPostgresURI)
+	metadataStorage, err := metadata.NewPostgresStorage(scPostgresURI)
 	if err != nil {
 		return err
 	}
+	mds := metadata.WithLogging(metadataStorage)
 
-	pgBackend, err := postgres.NewPostgresBackend(scPostgresURI)
-	if err != nil {
-		return err
-	}
+	proxy := backends.NewRegistry()
+	proxy.RegisterConnector(api.BackendType("postgres"), &postgres.Connector{})
 
-	proxy := backends.NewProxy()
-	proxy.RegisterBackend("pg", pgBackend)
-
-	svc := service.New(proxy, metadataStorage)
+	svc := service.New(proxy, mds)
 
 	server := &http.Server{
 		Handler: apis.NewV1API(svc),

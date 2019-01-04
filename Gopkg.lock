@@ -39,6 +39,12 @@
   version = "v1.0.0"
 
 [[projects]]
+  name = "github.com/mitchellh/mapstructure"
+  packages = ["."]
+  revision = "3536a929edddb9a5b34bd6861dc4a9647cb459fe"
+  version = "v1.1.2"
+
+[[projects]]
   branch = "master"
   name = "github.com/pkg/errors"
   packages = ["."]
@@ -83,6 +89,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "73553f021e61562419342cec073df8ea36db1101ebb3a286d708001d81fafb80"
+  inputs-digest = "6991db7dd9c6dbe4db51ae599671a69dcad6858b6fc5d8cc7d84de39b7020ead"
   solver-name = "gps-cdcl"
   solver-version = 1

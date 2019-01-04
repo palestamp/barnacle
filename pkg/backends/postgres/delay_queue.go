@@ -7,14 +7,11 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/xeipuuv/gojsonschema"
-
 	"github.com/jackc/pgx"
 	"github.com/pkg/errors"
 	"github.com/stretchr/objx"
 
 	"github.com/palestamp/barnacle/pkg/api"
-	"github.com/palestamp/barnacle/pkg/backends"
 )
 
 var simpleQueueOptionsSchema = `
@@ -41,17 +38,11 @@ var simpleQueueOptionsSchema = `
 }
 `
 
-func NewSimpleQueueManager(pool *pgx.ConnPool) (api.Backend, error) {
-	validator, err := backends.NewJSONSchemaValidator(gojsonschema.NewStringLoader(simpleQueueOptionsSchema))
-	if err != nil {
-		return nil, err
-	}
-
-	backend := &simpleQueueManager{pool: pool}
-	return backends.NewValidationMiddleware(backend, validator), nil
+func NewDelayQueueManager(pool *pgx.ConnPool) (api.Backend, error) {
+	return &delayQueueManager{pool: pool}, nil
 }
 
-type simpleQueueManager struct {
+type delayQueueManager struct {
 	pool *pgx.ConnPool
 }
 
@@ -59,7 +50,7 @@ func defaultTableName(topic api.QueueID) string {
 	return string(topic)
 }
 
-func (s *simpleQueueManager) Create(metadata api.QueueMetadata) error {
+func (s *delayQueueManager) CreateQueue(metadata api.RegisterQueueRequest) error {
 	obj := objx.Map(metadata.Options)
 	tableName := obj.Get("table").Str(defaultTableName(metadata.QueueID))
 
@@ -80,7 +71,7 @@ func (s *simpleQueueManager) Create(metadata api.QueueMetadata) error {
 	return err
 }
 
-func (s *simpleQueueManager) Delete(metadata api.QueueMetadata) error {
+func (s *delayQueueManager) Delete(metadata api.QueueMetadata) error {
 	obj := objx.Map(metadata.Options)
 	tableName := obj.Get("table").Str(defaultTableName(metadata.QueueID))
 
@@ -89,7 +80,7 @@ func (s *simpleQueueManager) Delete(metadata api.QueueMetadata) error {
 	return err
 }
 
-func (s *simpleQueueManager) Connect(metadata api.QueueMetadata) (api.Queue, error) {
+func (s *delayQueueManager) ConnectToQueue(metadata api.QueueMetadata) (api.Queue, error) {
 	obj := objx.Map(metadata.Options)
 	tableName := obj.Get("table").Str(defaultTableName(metadata.QueueID))
 	return newSimpleDelayQueue(s.pool, tableName)
@@ -164,17 +155,17 @@ func (t *simpleDelayQueue) Poll(pr api.PollRequest) ([]api.Message, error) {
 	return out, nil
 }
 
-func (t *simpleDelayQueue) Add(event api.MessageInput) (api.MessageID, error) {
-	delay := int64(event.Delay.Seconds())
+func (t *simpleDelayQueue) Add(emr api.EnqueueMessageRequest) (api.MessageID, error) {
+	delay := int64(emr.Delay.Seconds())
 	stmt := fmt.Sprintf(`
 		INSERT INTO 
 		queues.%s(data, scheduled_at, visible_at) VALUES
 			($1, NOW() + interval '%d seconds',  NOW() + interval '%d seconds') RETURNING message_id`,
 		t.table, delay, delay)
 
-	var eventID int64
-	err := t.pool.QueryRow(stmt, event.Data).Scan(&eventID)
-	return formatMessageID(eventID), err
+	var messageID int64
+	err := t.pool.QueryRow(stmt, emr.Data).Scan(&messageID)
+	return formatMessageID(messageID), err
 }
 
 func (t *simpleDelayQueue) Ack(ackKey string) error {

@@ -59,3 +59,7 @@
 [[constraint]]
   name = "github.com/spf13/cobra"
   branch = "master"
+
+[[constraint]]
+  name = "github.com/mitchellh/mapstructure"
+  version = "1.1.2"

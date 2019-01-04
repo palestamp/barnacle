@@ -10,10 +10,11 @@ import (
 )
 
 type V1APIService interface {
-	CreateQueue(api.QueueMetadata) error
-	CreateMessage(api.MessageInput) (api.MessageID, error)
+	CreateQueue(api.RegisterQueueRequest) error
+	CreateMessage(api.EnqueueMessageRequest) (api.MessageID, error)
 	AckMessage(api.QueueID, string) error
 	PollQueue(id api.QueueID, limit int, timeout, visibility time.Duration) ([]api.Message, error)
+	CreateResource(api.ResourceMetadata) error
 }
 
 func NewV1API(svc V1APIService) http.Handler {
@@ -23,6 +24,7 @@ func NewV1API(svc V1APIService) http.Handler {
 	mux.Handle("/v1/messages.create", http.HandlerFunc(s.CreateMessage))
 	mux.Handle("/v1/messages.poll", http.HandlerFunc(s.PollMessages))
 	mux.Handle("/v1/messages.ack", http.HandlerFunc(s.AckMessage))
+	mux.Handle("/v1/resources.create", http.HandlerFunc(s.CreateResource))
 	return mux
 }
 
@@ -31,7 +33,7 @@ type v1API struct {
 }
 
 func (s *v1API) CreateQueue(w http.ResponseWriter, r *http.Request) {
-	var m api.QueueMetadata
+	var m api.RegisterQueueRequest
 	if err := json.NewDecoder(r.Body).Decode(&m); err != nil {
 		http.Error(w, err.Error(), 400)
 	}
@@ -43,14 +45,14 @@ func (s *v1API) CreateQueue(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *v1API) CreateMessage(w http.ResponseWriter, r *http.Request) {
-	var ein api.MessageInput
-	if err := json.NewDecoder(r.Body).Decode(&ein); err != nil {
+	var emr api.EnqueueMessageRequest
+	if err := json.NewDecoder(r.Body).Decode(&emr); err != nil {
 		http.Error(w, err.Error(), 400)
 		return
 	}
 	defer r.Body.Close()
 
-	messageID, err := s.svc.CreateMessage(ein)
+	messageID, err := s.svc.CreateMessage(emr)
 	if err != nil {
 		http.Error(w, err.Error(), 500)
 		return
@@ -120,6 +122,18 @@ func (s *v1API) PollMessages(w http.ResponseWriter, r *http.Request) {
 	}{
 		Messages: mgs,
 	})
+}
+
+func (s *v1API) CreateResource(w http.ResponseWriter, r *http.Request) {
+	var m api.ResourceMetadata
+	if err := json.NewDecoder(r.Body).Decode(&m); err != nil {
+		http.Error(w, err.Error(), 400)
+	}
+	defer r.Body.Close()
+
+	if err := s.svc.CreateResource(m); err != nil {
+		http.Error(w, err.Error(), 500)
+	}
 }
 
 func parseSeconds(s string, def time.Duration) time.Duration {

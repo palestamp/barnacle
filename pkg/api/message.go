@@ -32,12 +32,6 @@ func (d *Delay) UnmarshalJSON(b []byte) error {
 	return err
 }
 
-type MessageInput struct {
-	ID    QueueID `json:"topic"`
-	Delay Delay   `json:"delay"`
-	Data  string  `json:"data"`
-}
-
 type Message struct {
 	ID          MessageID `json:"id"`
 	CreatedAt   time.Time `json:"created_at"`

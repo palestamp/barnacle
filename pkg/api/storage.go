@@ -1,16 +1,24 @@
 package api
 
-// QueueMetadataStorage defines behavior for configuration storage.
-type QueueMetadataStorage interface {
-	RegisterQueue(QueueMetadata) error
-	GetQueueMetadata(QueueID) (QueueMetadata, error)
+// MetadataStorage defines behavior for configuration storage.
+type MetadataStorage interface {
+	RegisterQueueMetadata(RegisterQueueRequest) error
+	SetQueueState(QueueID, QueueState) error
+	DeleteQueueMetadata(QueueID) error
+	GetQueueMetadata(qid QueueID, allowedStates ...QueueState) (QueueMetadata, error)
+	RegisterResource(ResourceMetadata) error
+}
+
+// Connector ...
+type Connector interface {
+	Connect(ResourceConnOptions) (Backend, error)
 }
 
 // Backend exposes interface for managing queue objects.
 type Backend interface {
 	// Create queue with QueueMetadata
-	Create(QueueMetadata) error
+	CreateQueue(RegisterQueueRequest) error
 
 	// Connect to queue with QueueMetadata
-	Connect(QueueMetadata) (Queue, error)
+	ConnectToQueue(QueueMetadata) (Queue, error)
 }
