@@ -42,6 +42,9 @@ type Connector struct{}
 
 func (c *Connector) Connect(ops api.ResourceConnOptions) (api.Backend, error) {
 	op, err := OptionsFromResource(ops)
+	if err != nil {
+		return nil, err
+	}
 
 	connConfig, err := pgx.ParseURI(op.URI)
 	if err != nil {
@@ -51,6 +54,7 @@ func (c *Connector) Connect(ops api.ResourceConnOptions) (api.Backend, error) {
 	pool, err := pgx.NewConnPool(pgx.ConnPoolConfig{
 		ConnConfig: connConfig,
 	})
+
 	if err != nil {
 		return nil, err
 	}
