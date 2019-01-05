@@ -105,7 +105,7 @@ func (t *simpleDelayQueue) Poll(pr api.PollRequest) ([]api.Message, error) {
 	SET 
 		visible_at = NOW() + interval '%d seconds',
 		attempts = attempts + 1,
-		ack_token = md5(random()::text)
+		ack_token = substring(md5(random()::text) from 1 for 7)
 	FROM (
 		SELECT
 			message_id
