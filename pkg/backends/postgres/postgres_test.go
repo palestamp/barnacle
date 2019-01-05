@@ -2,7 +2,6 @@ package postgres
 
 import (
 	_ "github.com/golang-migrate/migrate/source/file"
-	_ "github.com/lib/pq"
 )
 
 // const testDbURI = "postgresql://postgres@localhost:5434/barnacle"

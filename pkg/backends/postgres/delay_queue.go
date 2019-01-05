@@ -9,9 +9,9 @@ import (
 
 	"github.com/jackc/pgx"
 	"github.com/pkg/errors"
-	"github.com/stretchr/objx"
 
 	"github.com/palestamp/barnacle/pkg/api"
+	"github.com/palestamp/barnacle/pkg/machinery/decode"
 )
 
 var simpleQueueOptionsSchema = `
@@ -50,9 +50,26 @@ func defaultTableName(topic api.QueueID) string {
 	return string(topic)
 }
 
-func (s *delayQueueManager) CreateQueue(metadata api.RegisterQueueRequest) error {
-	obj := objx.Map(metadata.Options)
-	tableName := obj.Get("table").Str(defaultTableName(metadata.QueueID))
+type delayQueueOptions struct {
+	Table string `mapstructure:"table"`
+}
+
+func (s *delayQueueManager) decodeOpts(qm api.QueueOptions) (delayQueueOptions, error) {
+	var ops delayQueueOptions
+	err := decode.Decode(qm, &ops)
+	return ops, err
+}
+
+func (s *delayQueueManager) CreateQueue(rqr api.RegisterQueueRequest) error {
+	ops, err := s.decodeOpts(rqr.Options)
+	if err != nil {
+		return err
+	}
+
+	tableName := ops.Table
+	if tableName == "" {
+		tableName = string(rqr.QueueID)
+	}
 
 	stmt := fmt.Sprintf(`
 	CREATE TABLE queues.%s (
@@ -67,22 +84,37 @@ func (s *delayQueueManager) CreateQueue(metadata api.RegisterQueueRequest) error
 	CREATE INDEX idx_%s_visible_at ON queues.%s (visible_at);
 	`, tableName, tableName, tableName)
 
-	_, err := s.pool.Exec(stmt)
+	_, err = s.pool.Exec(stmt)
 	return err
 }
 
-func (s *delayQueueManager) Delete(metadata api.QueueMetadata) error {
-	obj := objx.Map(metadata.Options)
-	tableName := obj.Get("table").Str(defaultTableName(metadata.QueueID))
+func (s *delayQueueManager) Delete(qm api.QueueMetadata) error {
+	ops, err := s.decodeOpts(qm.Options)
+	if err != nil {
+		return err
+	}
+
+	tableName := ops.Table
+	if tableName == "" {
+		tableName = string(qm.QueueID)
+	}
 
 	stmt := fmt.Sprintf("DROP TABLE %s", tableName)
-	_, err := s.pool.Exec(stmt)
+	_, err = s.pool.Exec(stmt)
 	return err
 }
 
-func (s *delayQueueManager) ConnectToQueue(metadata api.QueueMetadata) (api.Queue, error) {
-	obj := objx.Map(metadata.Options)
-	tableName := obj.Get("table").Str(defaultTableName(metadata.QueueID))
+func (s *delayQueueManager) ConnectToQueue(qm api.QueueMetadata) (api.Queue, error) {
+	ops, err := s.decodeOpts(qm.Options)
+	if err != nil {
+		return nil, err
+	}
+
+	tableName := ops.Table
+	if tableName == "" {
+		tableName = string(qm.QueueID)
+	}
+
 	return newSimpleDelayQueue(s.pool, tableName)
 }
 
