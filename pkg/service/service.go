@@ -91,7 +91,7 @@ func (s *Service) connectBackendByMetadata(qm api.QueueMetadata) (api.Backend, e
 		return nil, err
 	}
 
-	return connector.Connect(qm.ConnOptions)
+	return connector.Connect(qm.ResourceID, qm.ConnOptions)
 }
 
 func (s *Service) connectBackend(id api.QueueID, qss ...api.QueueState) (api.Backend, error) {

@@ -9,9 +9,9 @@ type MetadataStorage interface {
 	RegisterResource(ResourceMetadata) error
 }
 
-// Connector ...
+// Connector is a factory for Backend creation.
 type Connector interface {
-	Connect(ResourceConnOptions) (Backend, error)
+	Connect(ResourceID, ResourceConnOptions) (Backend, error)
 }
 
 // Backend exposes interface for managing queue objects.

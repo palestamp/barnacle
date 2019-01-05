@@ -41,7 +41,7 @@ func serveCmd(cmd *cobra.Command, args []string) error {
 	mds := metadata.WithLogging(metadataStorage)
 
 	proxy := backends.NewRegistry()
-	proxy.RegisterConnector(api.BackendType("postgres"), &postgres.Connector{})
+	proxy.RegisterConnector(api.BackendType("postgres"), postgres.NewConnector())
 
 	svc := service.New(proxy, mds)
 

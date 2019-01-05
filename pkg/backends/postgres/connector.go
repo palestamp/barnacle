@@ -1,49 +1,43 @@
 package postgres
 
 import (
-	"fmt"
-	"strings"
-
 	"github.com/jackc/pgx"
-	"github.com/mitchellh/mapstructure"
-	"github.com/pkg/errors"
 
 	"github.com/palestamp/barnacle/pkg/api"
+	"github.com/palestamp/barnacle/pkg/machinery/decode"
 )
 
 type ResourceConnOptions struct {
 	URI string `mapstructure:"uri"`
 }
 
-func OptionsFromResource(ops api.ResourceConnOptions) (*ResourceConnOptions, error) {
-	var res ResourceConnOptions
-	var m mapstructure.Metadata
-	decoder, err := mapstructure.NewDecoder(&mapstructure.DecoderConfig{
-		Result:   &res,
-		Metadata: &m,
-	})
-	if err != nil {
-		return nil, errors.WithMessage(err, "resource decoding failed")
-	}
-
-	if err := decoder.Decode(ops); err != nil {
-		return nil, errors.WithMessage(err, "resource decoding failed")
-	}
-
-	if len(m.Unused) != 0 {
-		err = fmt.Errorf("unknown fields: %s", strings.Join(m.Unused, ", "))
-		return nil, errors.WithMessage(err, "resource decoding failed")
-	}
-
-	return &res, nil
+func (ops *ResourceConnOptions) verifyKey() string {
+	return "uri:" + ops.URI
 }
 
-type Connector struct{}
+func NewConnector() api.Connector {
+	return &connector{
+		cache: make(map[api.ResourceID]connectorCacheEntry),
+	}
+}
 
-func (c *Connector) Connect(ops api.ResourceConnOptions) (api.Backend, error) {
-	op, err := OptionsFromResource(ops)
-	if err != nil {
+type connectorCacheEntry struct {
+	backend   api.Backend
+	verifyKey string
+}
+
+type connector struct {
+	cache map[api.ResourceID]connectorCacheEntry
+}
+
+func (c *connector) Connect(rid api.ResourceID, ops api.ResourceConnOptions) (api.Backend, error) {
+	var op ResourceConnOptions
+	if err := decode.Decode(ops, &op); err != nil {
 		return nil, err
+	}
+
+	if entry := c.lookupCache(rid, op.verifyKey()); entry != nil {
+		return entry.backend, nil
 	}
 
 	connConfig, err := pgx.ParseURI(op.URI)
@@ -54,10 +48,32 @@ func (c *Connector) Connect(ops api.ResourceConnOptions) (api.Backend, error) {
 	pool, err := pgx.NewConnPool(pgx.ConnPoolConfig{
 		ConnConfig: connConfig,
 	})
-
 	if err != nil {
 		return nil, err
 	}
 
-	return NewBackendFromPool(pool), nil
+	backend := NewBackendFromPool(pool)
+	c.setCache(rid, op.verifyKey(), backend)
+	return backend, nil
+}
+
+func (c *connector) lookupCache(rid api.ResourceID, verifyKey string) *connectorCacheEntry {
+	entry, ok := c.cache[rid]
+	if !ok {
+		return nil
+	}
+
+	if entry.verifyKey != verifyKey {
+		delete(c.cache, rid)
+		return nil
+	}
+
+	return &entry
+}
+
+func (c *connector) setCache(rid api.ResourceID, verifyKey string, backend api.Backend) {
+	c.cache[rid] = connectorCacheEntry{
+		backend:   backend,
+		verifyKey: verifyKey,
+	}
 }

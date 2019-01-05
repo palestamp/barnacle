@@ -12,21 +12,21 @@ type PostgresQueueType string
 
 var (
 	ErrUnknownQueueType = errors.New("unknown queue type")
+
+	queueTypes = map[api.QueueType]backendCreator{
+		api.SimpleDelayQueue: NewDelayQueueManager,
+	}
 )
 
 type backendCreator func(*pgx.ConnPool) (api.Backend, error)
 
 type PostgresBackend struct {
-	pool  *pgx.ConnPool
-	types map[api.QueueType]backendCreator
+	pool *pgx.ConnPool
 }
 
 func NewBackendFromPool(pool *pgx.ConnPool) *PostgresBackend {
 	return &PostgresBackend{
 		pool: pool,
-		types: map[api.QueueType]backendCreator{
-			api.SimpleDelayQueue: NewDelayQueueManager,
-		},
 	}
 }
 
@@ -49,7 +49,7 @@ func (s *PostgresBackend) ConnectToQueue(qm api.QueueMetadata) (api.Queue, error
 }
 
 func (s *PostgresBackend) getQueueManager(qt api.QueueType) (api.Backend, error) {
-	queueManagerCreator, ok := s.types[qt]
+	queueManagerCreator, ok := queueTypes[qt]
 	if !ok {
 		return nil, ErrUnknownQueueType
 	}
