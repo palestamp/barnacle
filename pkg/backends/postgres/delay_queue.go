@@ -2,8 +2,8 @@ package postgres
 
 import (
 	"context"
-
 	"fmt"
+	"regexp"
 	"strconv"
 	"strings"
 
@@ -14,29 +14,7 @@ import (
 	"github.com/palestamp/barnacle/pkg/machinery/decode"
 )
 
-var simpleQueueOptionsSchema = `
-{
-    "$id": "1",
-    "$schema": "http://json-schema.org/draft-07/schema#",
-    "title": "SimpleQueueMetadata",
-    "oneOf": [
-        {
-            "type": "object",
-            "properties": {
-                "table": {
-                    "description": "Queue name",
-                    "type": "string",
-                    "pattern": "^[a-z][a-z0-9_]{0,32}$"
-                }
-            },
-            "additionalProperties": false
-        },
-        {
-            "type": "null"
-        }
-    ]
-}
-`
+var ErrTableNameInvalid = errors.New("table name invalid")
 
 func NewDelayQueueManager(pool *pgx.ConnPool) (api.Backend, error) {
 	return &delayQueueManager{pool: pool}, nil
@@ -46,17 +24,26 @@ type delayQueueManager struct {
 	pool *pgx.ConnPool
 }
 
-func defaultTableName(topic api.QueueID) string {
-	return string(topic)
-}
+var queueTableNamePattern = regexp.MustCompile(`[a-z][a-z0-9_]{0,31s}`)
 
 type delayQueueOptions struct {
 	Table string `mapstructure:"table"`
 }
 
+func (dq *delayQueueOptions) Validate() error {
+	if !queueTableNamePattern.MatchString(dq.Table) {
+		return ErrTableNameInvalid
+	}
+	return nil
+}
+
 func (s *delayQueueManager) decodeOpts(qm api.QueueOptions) (delayQueueOptions, error) {
 	var ops delayQueueOptions
-	err := decode.Decode(qm, &ops)
+	if err := decode.Decode(qm, &ops); err != nil {
+		return ops, err
+	}
+
+	err := ops.Validate()
 	return ops, err
 }
 
@@ -64,11 +51,6 @@ func (s *delayQueueManager) CreateQueue(rqr api.RegisterQueueRequest) error {
 	ops, err := s.decodeOpts(rqr.Options)
 	if err != nil {
 		return err
-	}
-
-	tableName := ops.Table
-	if tableName == "" {
-		tableName = string(rqr.QueueID)
 	}
 
 	stmt := fmt.Sprintf(`
@@ -82,7 +64,7 @@ func (s *delayQueueManager) CreateQueue(rqr api.RegisterQueueRequest) error {
 		data text
 	);
 	CREATE INDEX idx_%s_visible_at ON queues.%s (visible_at);
-	`, tableName, tableName, tableName)
+	`, ops.Table, ops.Table, ops.Table)
 
 	_, err = s.pool.Exec(stmt)
 	return err
@@ -94,12 +76,7 @@ func (s *delayQueueManager) Delete(qm api.QueueMetadata) error {
 		return err
 	}
 
-	tableName := ops.Table
-	if tableName == "" {
-		tableName = string(qm.QueueID)
-	}
-
-	stmt := fmt.Sprintf("DROP TABLE %s", tableName)
+	stmt := fmt.Sprintf("DROP TABLE %s", ops.Table)
 	_, err = s.pool.Exec(stmt)
 	return err
 }
@@ -110,12 +87,7 @@ func (s *delayQueueManager) ConnectToQueue(qm api.QueueMetadata) (api.Queue, err
 		return nil, err
 	}
 
-	tableName := ops.Table
-	if tableName == "" {
-		tableName = string(qm.QueueID)
-	}
-
-	return newSimpleDelayQueue(s.pool, tableName)
+	return newSimpleDelayQueue(s.pool, ops.Table)
 }
 
 type simpleDelayQueue struct {
