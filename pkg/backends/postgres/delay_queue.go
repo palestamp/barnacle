@@ -16,7 +16,7 @@ import (
 
 var ErrTableNameInvalid = errors.New("table name invalid")
 
-func NewDelayQueueManager(pool *pgx.ConnPool) (api.Backend, error) {
+func NewDelayQueueManager(pool *pgx.ConnPool) (api.Manager, error) {
 	return &delayQueueManager{pool: pool}, nil
 }
 

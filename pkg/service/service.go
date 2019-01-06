@@ -77,34 +77,39 @@ func (s *Service) connectQueueByID(id api.QueueID) (api.Queue, error) {
 		return nil, err
 	}
 
-	backend, err := s.connectBackendByMetadata(qm)
+	manager, err := s.connectManagerByMetadata(qm)
 	if err != nil {
 		return nil, err
 	}
 
-	return backend.ConnectToQueue(qm)
+	return manager.ConnectToQueue(qm)
 }
 
-func (s *Service) connectBackendByMetadata(qm api.QueueMetadata) (api.Backend, error) {
+func (s *Service) connectManagerByMetadata(qm api.QueueMetadata) (api.Manager, error) {
 	connector, err := s.connectorFactory.Connector(qm.BackendType)
 	if err != nil {
 		return nil, err
 	}
 
-	return connector.Connect(qm.ResourceID, qm.ConnOptions)
+	backend, err := connector.Connect(qm.ResourceID, qm.ConnOptions)
+	if err != nil {
+		return nil, err
+	}
+
+	return backend.GetQueueManager(qm.QueueType)
 }
 
-func (s *Service) connectBackend(id api.QueueID, qss ...api.QueueState) (api.Backend, error) {
+func (s *Service) connectManager(id api.QueueID, qss ...api.QueueState) (api.Manager, error) {
 	qm, err := s.qms.GetQueueMetadata(id, qss...)
 	if err != nil {
 		return nil, err
 	}
 
-	return s.connectBackendByMetadata(qm)
+	return s.connectManagerByMetadata(qm)
 }
 
 func (s *Service) createQueue(qmi api.RegisterQueueRequest) error {
-	backend, err := s.connectBackend(qmi.QueueID, api.ActiveQueueState, api.InactiveQueueState)
+	backend, err := s.connectManager(qmi.QueueID, api.ActiveQueueState, api.InactiveQueueState)
 	if err != nil {
 		return err
 	}

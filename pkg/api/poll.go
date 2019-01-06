@@ -5,14 +5,6 @@ import (
 	"time"
 )
 
-// The Queue interface is implemented by objects that
-// represent queue
-type Queue interface {
-	Add(EnqueueMessageRequest) (MessageID, error)
-	Ack(ackKey string) error
-	Poll(PollRequest) ([]Message, error)
-}
-
 // Waiter defines behavior for calculating sleep duration on poll loops
 type Waiter interface {
 	CalculateSleep(deadlineIn time.Duration) time.Duration
