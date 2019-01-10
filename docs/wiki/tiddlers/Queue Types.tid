@@ -1,0 +1,30 @@
+created: 20190106221416232
+list: 
+modified: 20190107145435350
+tags: Whiteboard
+title: Queue Types
+type: text/vnd.tiddlywiki
+
+!! Reliable FIFO
+Classic First-In-First-Out queue.
+
+!!! Use cases
+
+* Processing messages in order. This use case often curry a lot of load in terms of messages count per second. Postgres won’t be a good solution for such workloads.
+
+!!! Interface
+
+```go
+type FIFO interface {
+	Push(msg Message) error
+	Pop(count int) ([]Message, error)
+	Ack(mid MessageID) error
+}
+```
+
+!! Delayed Queue
+Queue that holds messages invisible until some deadline. Delayed Queue is a supertype of FIFO Queue and a sibling of Priority Queue (PQ has discrete buckets, DQ has continuous buckets). FIFO can be implemented as DQ with constant 0 visibility timeout.
+
+!!! Use cases
+* Periodic Jobs (delayed queue provides opportunity to create periodic tasks)
+* Jobs scheduled to be executed at some specific time.

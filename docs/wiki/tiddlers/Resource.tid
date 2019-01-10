@@ -1,0 +1,8 @@
+created: 20190107145839792
+modified: 20190107150505051
+tags: Datamodel
+title: Resource
+
+Resource is an entity that represents a way (definition) to connect to physical storage.
+
+Resources are not self-contained entities - to use resource system must have a [[Connector]] that can understand Resource format.

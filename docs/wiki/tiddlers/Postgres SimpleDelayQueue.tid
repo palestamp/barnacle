@@ -1,0 +1,79 @@
+created: 20190107161218998
+modified: 20190107221505286
+tags: PostgresBackend
+title: Postgres SimpleDelayQueue
+
+
+
+|State| DRAFT|
+|Complies to| SimpleDelayQueue, ReliableMessageDelivery, QueueObservability|
+|Identifier| simple-delay|
+
+@@.tc-tiddler-frame
+This queue type is a ~PoC and reference queue for Barnacle project, this is not intended for usecases with high performance/throughput requirements.
+@@
+
+!! Abstract
+
+A lot of MQ solutions present a good, performant instruments to operate with standard queues (FIFO). There are not so much tools (even plugins) that allow to host durable delay queue functionality.
+
+Some references:
+
+* [[AWS SQS Delay Queue|https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-delay-queues.html]] - as of January 2019 SQS supports 15 minutes delay maximum.
+
+
+!! Rationale
+
+Storing message queues in RDBMS is a known anti-pattern, it is based on scalability and performance issues that can be arised due to [[ACID|https://en.wikipedia.org/wiki/ACID_(computer_science)]] complience of database systems. This narrows the scope of usability (depending on system load) of such a backend. 
+
+From the other hand, not so much systems/usecases require high or even moderate throughput.
+
+ 
+
+!! Reference Implementation
+
+
+!!! Table Layout
+Delay queue stores messages in one table with next structure:
+
+```sql
+	CREATE TABLE queues.QUEUE_NAME (
+		message_id BIGSERIAL PRIMARY KEY,
+		created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+		scheduled_at TIMESTAMP WITH TIME ZONE NOT NULL,
+		visible_at TIMESTAMP WITH TIME ZONE NOT NULL,
+		ack_token varchar(32),
+		attempts int NOT NULL DEFAULT 0,
+		data text
+	);
+```
+
+Where:
+
+* message_id: message identifier
+* created_at: timestamp of message creation, this is data field, it's not used for processing.
+* scheduled_at: time when message should be scheduled, data field.
+* visible_at: time after which message will be visible for clients. This is operational field. After message enqueueing value of this column is equal to scheduled_at value. 
+* ack_token: random string which is used to solve races on message processing acknowledgement.
+* attempts: number of times that message was polled.
+* data: message data.
+
+!!! Message Visibility
+
+This is part of [[ReliableMessageDelivery]] mechanism.
+
+Message is considered ''visible'' if `visible_at <= NOW()`
+
+When client retrieve message from queue, it's `visible_at` field updated to `NOW() + VISIBILITY_TIMEOUT` value which makes message invisible for all clients for `VISIBILITY_TIMEOUT` interval. After interval expires, message become visible again.
+
+!!! Acknowlegment
+
+This is part of [[ReliableMessageDelivery]] mechanism.
+
+Each retrieved message has a `ack_token` field which should be send to Barnacle after message was succesfully processed by consumer. 
+
+!!! Retrieval mechanism
+
+Retrieval of messages from a queue is a write operation (we need to update `visible_at`, `attempts` and `ack_token` fields).
+
+Messages retrieved from queue using combination of `UPDATE` and `SELECT ... FOR UPDATE SKIP LOCKED` to prevent lock contention on the table.

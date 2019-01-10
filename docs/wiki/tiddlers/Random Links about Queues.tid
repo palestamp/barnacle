@@ -1,0 +1,14 @@
+created: 20190106225945281
+modified: 20190106230253159
+tags: [[Message Queues]]
+title: Random Links about Queues
+type: text/vnd.tiddlywiki
+
+
+* [[GitHub - adjust/redismq: a durable message queue system for go based on redis|https://github.com/adjust/redismq]]
+
+* [[Tuning Redismq - how to use Redis in Go - Big elephants|http://big-elephants.com/2013-10/tuning-redismq-how-to-use-redis-in-go/]]
+
+* [[Building a Message Queue using Redis in Go - Big elephants|http://big-elephants.com/2013-09/building-a-message-queue-using-redis-in-go/]]
+
+* ~PgQ

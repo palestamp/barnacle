@@ -1,0 +1,20 @@
+created: 20190106221035563
+modified: 20190107145317652
+tags: Barnacle
+title: Project Requirements
+type: text/vnd.tiddlywiki
+
+!! Non-functional traits
+* Service MUST provide data persistence guarantees across shutdowns of service.
+
+* Read after write consistency MUST be provided for creation of Message.
+
+* Service MUST offer [[at least one delivery semantics|At-least-once message delivery]].
+
+
+
+!! Functional traits (draft)
+* Service SHOULD provide dead-queue-like (referencing SQS) functionality for events that reached max number of retries. With configurable max size.
+* Event SHOULD be cancelable by id and group_id at any time before dispatching to upstream. Events can also be canceled while executor is paused. 
+* Service SHOULD provide audit history of executed events.
+* Scheduler SHOULD be able to retry event export for several times.

@@ -1,0 +1,12 @@
+created: 20190106171507995
+list: 
+modified: 20190107145426907
+project: barnacle,asd
+tags: Architecture Queue
+title: Pull vs push model for queue service
+type: text/vnd.tiddlywiki
+
+# Pull can be reverted into push via some kind of inverter in a stateless manner, while opposite is impossible 
+# Pull model can naturally have //bulk-like// functionality, see third point.
+# While this is not necessarily good point but, pull model has //per-request// parametrization , which is not possible for push model. This makes bulks possible but not obligatory.
+# Push model delegates back pressure functionality to consumer which should somehow adapt to the load or reconfigure producer system on the fly (if possible).

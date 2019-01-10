@@ -1,0 +1,11 @@
+created: 20190107175505338
+modified: 20190107183040064
+tags: Policy
+title: ReliableMessageDelivery
+
+Complience of QueueType to this policy means that reliable message delivery is guaranteed by queue.
+
+There a a few ways to guarantee aforementioned property, look through [[this|https://docs.oracle.com/cd/E19575-01/820-6424/aerbz/index.html]] page for more information on topic.
+
+!! Acknowlegment
+In case client processes message succesfuly, he must send ACK call to the broker. Acknowlegment marks delivery as successful and deletes (retire) message from queue.

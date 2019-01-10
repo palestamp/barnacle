@@ -1,0 +1,26 @@
+created: 20190107151834606
+modified: 20190107182629922
+tags: BackendType
+title: PostgresBackend
+type: text/vnd.tiddlywiki
+
+This [[Backend]] provides possibility to store queue messages in ~PostgreSQL database.
+
+!! Supported [[QueueType]]s
+
+<<list-links "[tag[PostgresBackend]sort[title]]">>
+
+
+
+!! [[Resource]] format
+
+|!Field |!Required |!Description|
+| uri | yes | ~PostgreSQL [[connection string|https://www.postgresql.org/docs/current/libpq-connect.html#LIBPQ-CONNSTRING]] |
+
+!!! Example 
+
+```json
+{
+    "uri": "postgresql://postgres@localhost:5432/barnacle"
+}
+```

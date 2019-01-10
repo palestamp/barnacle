@@ -1,0 +1,85 @@
+created: 20190107112751807
+list: 
+modified: 20190107145825701
+tags: API Whiteboard
+title: v1 API (draft)
+type: text/vnd.tiddlywiki
+
+!! Create Resource
+
+Creates [[Resource]] which will be used to access storage that host queues. Resource's `options` does not validated on resource creation, only on queue creation.  
+
+Example:
+
+```json
+POST /v1/resources.create
+
+{
+    "id": "main_postgres",
+    "options": {
+        "uri": "postgresql://postgres@localhost:5434/barnacle"
+    }
+}
+```
+
+!! Create Queue
+
+Creates new queue backed by `main_postgres` Resource.
+
+* `id` - user defined QueueID.
+* `backend` - BackendType
+* `type` - QueueType, defines how queue will behave, see EntitiesTaxonomy for more information about available ~QueueTypes and ~BackendTypes.
+* `resource` - defines [[Resource]] which will host queue messages.
+* `options` - QueueType-specific arguments.
+
+Example:
+
+```json
+POST /v1/queues.create
+
+{
+    "id": "erebor",
+    "backend": "postgres",
+    "type": "simple-delay",
+    "resource": "main_postgres",
+    "options": {
+        "table": "erebor"
+    }
+}
+```
+
+!! Create Message
+
+Enqueue message into queue.
+
+Arguments:
+
+* `queue` - QueueID of destination queue.
+* `delay` - delay in Go `time.Duration` notation
+* `data` - data of message, this field must be of string type. 
+
+Example:
+
+```json
+POST /v1/messages.create
+
+{
+    "queue": "erebor_eeints3572",
+    "delay": "30s",
+    "data": "sdfasdsd"
+}
+```
+
+''Need to be changed into next notation.'' Where `options` field is queue-specific
+
+```json
+POST /v1/messages.create
+
+{
+    "queue": "erebor_eeints3572",
+    "data": "sdfasdsd",
+    "options": {
+        "delay": "30s"
+    }
+}
+```

@@ -1,0 +1,6 @@
+created: 20190107150510559
+modified: 20190107150633223
+tags: Datamodel
+title: Connector
+
+Connector connects [[Backend]] to [[Resource]].

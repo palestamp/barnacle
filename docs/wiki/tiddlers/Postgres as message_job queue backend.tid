@@ -1,0 +1,9 @@
+created: 20190106171329533
+modified: 20190106181300893
+tags: Queue Postgres Database
+title: Postgres as message/job queue backend
+type: text/vnd.tiddlywiki
+
+https://softwareengineering.stackexchange.com/a/351533
+
+https://www.codeproject.com/Articles/110931/%2FArticles%2F110931%2FBuilding-High-Performance-Queue-in-Database-for-st

@@ -1,0 +1,12 @@
+created: 20190107150243426
+modified: 20190107182409878
+tags: Datamodel
+title: Backend
+
+Backend represents an entity that is able to provide QueueManager.
+
+Backend holds knowledge about all queue types which are possible to use with it.
+
+For example PostgresBackend provides SimpleDelayQueue.
+
+See [[BackendType]] for a full list of Backends.

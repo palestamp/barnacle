@@ -1,0 +1,11 @@
+created: 20190107150815726
+modified: 20190107151015732
+tags: Datamodel
+title: QueueManager
+type: text/vnd.tiddlywiki
+
+Is an interface for common queue-management operations such as:
+
+* queue creation
+* queue deletion 
+* instantiating queue object

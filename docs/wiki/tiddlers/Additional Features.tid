@@ -1,0 +1,18 @@
+created: 20190106221832295
+list: 
+modified: 20190107145317654
+tags: [[Project Requirements]]
+title: Additional Features
+type: text/vnd.tiddlywiki
+
+!! Periodic enqueuing on Delayed Queue
+This feature can be implemented via custom manager which state also persists in the database, one queue can be managed with more than one manager. See also [[Schedules prototypes]]
+
+!!! Use cases
+* Cron-like functionality
+
+!! Groups
+Group can provide two things: filtering and locking. Filtering is a simple (for SQL interfaces) filtering on message attribute. Locking is a abstraction that moves visibility timeout to groups - if one client reads messages from a particular set of groups - nobody else can see messages from these groups.
+
+!!! Use cases
+* Moderation queue lock - ads from one account can not be processed in parallel in case we are interested in rejecting duplicated ads.

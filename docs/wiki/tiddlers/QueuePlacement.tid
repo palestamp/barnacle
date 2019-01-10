@@ -1,0 +1,38 @@
+created: 20190106214207228
+list: 
+modified: 20190107145426907
+tags: Architecture
+title: QueuePlacement
+type: text/vnd.tiddlywiki
+
+[img[AlternativeQueueHostingConcepts.png]]
+
+!! Embedded queue
+
+Queue is embedded into application database, managed from application code.
+Possible distribution ways: library.
+
+!!! Pros
+
+# Overall simplicity of development.
+# Minimum maintenance surface.
+# Possible referential integrity in case of queue schema integration with domain models.
+# No need for separate infrastructure
+
+!!! Cons
+# No isolation (affecting scalability)
+# No offloaded queue management, necessity to implement and expose telemetry on queue-specific indicators.
+# Queue governance problem: either Service expose Enqueue and Dequeue capabilities, this effectively makes Service single point of failure, or Enqueue and Dequeue capabilities are distributed to different services and this creates shared datasource for domain services which is known anti-pattern.
+
+
+!! Dedicated Storage
+Queue managed from application code, storage is separated from Service storage.
+!!! Pros
+!!! Cons
+
+!! Queue as a Service
+
+Queue(s) managed by dedicated system which provides rich range of functionality and needs basic integration activities from user.
+
+!!! Pros
+!!! Cons

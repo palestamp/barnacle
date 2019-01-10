@@ -1,0 +1,7 @@
+created: 20190107155549285
+modified: 20190107155846735
+tags: QueueType
+title: SimpleDelayQueue
+
+~SimpleDelayQueue is a bare delay queue without any additional features.
+

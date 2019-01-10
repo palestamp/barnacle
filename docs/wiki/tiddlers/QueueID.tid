@@ -1,0 +1,8 @@
+created: 20190107151339660
+modified: 20190107151712117
+tags: Datamodel
+title: QueueID
+
+~QueueID is a unique user-defined queue identity.
+
+~QueueID is a string that must match next pattern: `^[_a-z][_a-z0-9]*$`
