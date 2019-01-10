@@ -3,3 +3,4 @@ vendor/
 .env
 barnacle
 !barnacle/
+docs/wikiout
