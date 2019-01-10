@@ -4,7 +4,7 @@ import (
 	"github.com/jackc/pgx"
 
 	"github.com/palestamp/barnacle/pkg/api"
-	"github.com/palestamp/barnacle/pkg/machinery/decode"
+	"github.com/palestamp/barnacle/pkg/machinery/decoder"
 )
 
 type ResourceConnOptions struct {
@@ -32,7 +32,7 @@ type connector struct {
 
 func (c *connector) Connect(rid api.ResourceID, ops api.ResourceConnOptions) (api.Backend, error) {
 	var op ResourceConnOptions
-	if err := decode.Decode(ops, &op); err != nil {
+	if err := decoder.Decode(ops, &op); err != nil {
 		return nil, err
 	}
 
