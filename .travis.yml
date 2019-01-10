@@ -8,7 +8,7 @@ install:
 - echo "Skip default install"
 
 script:
-- tiddlywiki ./docs/wiki --verbose --output ./docs/wikiout --buildravis.yml
+- tiddlywiki ./docs/wiki --verbose --output ./docs/wikiout --build
 
 
 deploy:
