@@ -11,7 +11,7 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/palestamp/barnacle/pkg/api"
-	"github.com/palestamp/barnacle/pkg/machinery/decode"
+	"github.com/palestamp/barnacle/pkg/machinery/decoder"
 )
 
 var ErrTableNameInvalid = errors.New("table name invalid")
@@ -24,7 +24,7 @@ type delayQueueManager struct {
 	pool *pgx.ConnPool
 }
 
-var queueTableNamePattern = regexp.MustCompile(`[a-z][a-z0-9_]{0,31s}`)
+var queueTableNamePattern = regexp.MustCompile(`[a-z][a-z0-9_]{0,31}`)
 
 type delayQueueOptions struct {
 	Table string `mapstructure:"table"`
@@ -39,7 +39,7 @@ func (dq *delayQueueOptions) Validate() error {
 
 func (s *delayQueueManager) decodeOpts(qm api.QueueOptions) (delayQueueOptions, error) {
 	var ops delayQueueOptions
-	if err := decode.Decode(qm, &ops); err != nil {
+	if err := decoder.Decode(qm, &ops); err != nil {
 		return ops, err
 	}
 
